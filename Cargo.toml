@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Alec Goncharow <Alec.Goncharow@gmail.com>"]
 description= "A small library used to deserializing, and possibliy serializing the base64 Artifact strings"
 repository="https://github.com/AlecGoncharow/artifact_serde"
-liscense="MIT"
+license="MIT"
 
 [badges]
 maintenance = {status = "experimental"}
