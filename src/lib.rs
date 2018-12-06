@@ -1,3 +1,8 @@
+//! # artifact_serde
+//! This is a small crate to handle deseralizing and potentially serializing Artifact Deck Codes
+//! See this link for reference implementation: [link](https://github.com/ValveSoftware/ArtifactDeckCode)
+//!
+
 extern crate base64;
 extern crate regex;
 #[macro_use]
@@ -146,8 +151,64 @@ pub struct Reference {
     pub count: usize,
 }
 
-// refer to deck_decoder.php for reference implementation
-// https://github.com/ValveSoftware/ArtifactDeserializedDeckCode/
+/// Takes in an Artifact Deck Code as a &str and returns a DeserializedDeck matching the structure
+/// refer to deck_decoder.php for reference implementation and expected structure
+/// [here](https://github.com/ValveSoftware/ArtifactDeckCode)
+/// or specifially:
+/// ```ignore
+///{
+///  "card_set": {
+///    "version": 1,
+///  "set_info": {
+///   "set_id": 0,
+///    "pack_item_def": 0,
+///     "name": {
+///        "english": "Base Set"
+///      }
+///    },
+///   "card_list": [{
+///
+///   "card_id": 4000,
+///   "base_card_id": 4000,
+///    "card_type": "Hero",
+///   "card_name": {
+///     "english": "Farvhan the Dreamer"
+///  },
+///   "card_text": {
+///      "english": "Pack Leadership<BR>\nFarvhan the Dreamer's allied neighbors have +1 Armor."
+///    },
+///     "mini_image": {
+///       "default": "<url to png>"
+///     },
+///    "large_image": {
+///       "default": "<url to png>"
+///      },
+///     "ingame_image": {
+///       "default": "<url to png>"
+///    },
+///    "is_green": true,
+///    "attack": 4,
+///    "hit_points": 10,
+///      "references": [{
+///      "card_id": 4002,
+///        "ref_type": "includes",
+///          "count": 3
+///  },
+///        {
+///        "card_id": 4001,
+///      "ref_type": "passive_ability"
+///        }
+///    ]
+///
+///
+///    },
+///    ..... more cards ....
+///
+///    ]
+///  }
+///}
+///```
+///
 pub fn decode(adc: &str) -> DeserializedDeck {
     let re = Regex::new(r"^ADC").unwrap();
     let mut stripped_adc = re.replace_all(adc, "");
@@ -163,6 +224,10 @@ pub fn decode(adc: &str) -> DeserializedDeck {
     let decoded = base64::decode(&adc_string).unwrap();
     parse_deck(adc_string, decoded)
 }
+
+/// Takes in a vector of JSON formatted &str and attempts to coerce them into CardSetJson,
+/// the JSON should take the form mentioned
+/// [here](https://github.com/ValveSoftware/ArtifactDeckCode)
 pub fn json_to_deck_hashmap(sets: Vec<&str>) -> HashMap<usize, Card> {
     let mut d_sets = Vec::new();
     for set in sets {
@@ -203,7 +268,7 @@ pub struct DeserializedDeck {
     pub name: String,
 }
 
-pub fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> DeserializedDeck {
+fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> DeserializedDeck {
     let total_bytes = deck_bytes.len();
     let mut current_byte_index = 0 as usize;
     let version_and_heroes = deck_bytes.get(0).unwrap();
