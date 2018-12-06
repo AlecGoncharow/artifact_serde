@@ -154,12 +154,12 @@ pub struct Reference {
 /// Takes in an Artifact Deck Code as a &str and returns a DeserializedDeck matching the structure
 /// refer to deck_decoder.php for reference implementation and expected structure
 /// [here](https://github.com/ValveSoftware/ArtifactDeckCode)
-/// # Example:  
+/// # Example  
 /// ```
 /// artifact_serde::decode("ADCJWkTZX05uwGDCRV4XQGy3QGLmqUBg4GQJgGLGgO7AaABR3JlZW4vQmxhY2sgRXhhbXBsZQ__");
 /// ```
 
-pub fn decode(adc: &str) -> DeserializedDeck {
+pub fn decode(adc: &str) -> Result<DeserializedDeck, String> {
     let re = Regex::new(r"^ADC").unwrap();
     let mut stripped_adc = re.replace_all(adc, "");
     stripped_adc = stripped_adc
@@ -232,19 +232,22 @@ pub fn decode(adc: &str) -> DeserializedDeck {
 ///}
 ///```
 ///
-pub fn json_to_deck_hashmap(sets: Vec<&str>) -> HashMap<usize, Card> {
+pub fn json_to_deck_hashmap(sets: Vec<&str>) -> Result<HashMap<usize, Card>, String> {
     let mut d_sets = Vec::new();
     for set in sets {
         let s: CardSetJson = match serde_json::from_str(set) {
             Ok(s) => s,
-            Err(e) => panic!("Not Valid JSON: {}", e),
+            Err(e) => {
+                let error_string = format!("Invalid JSON input: {}", e);
+                return Err(error_string);
+            }
         };
 
         let d = s.card_set;
         d_sets.push(d);
     }
 
-    set_up_deck_map(d_sets)
+    Ok(set_up_deck_map(d_sets))
 }
 fn set_up_deck_map(sets: Vec<CardSet>) -> HashMap<usize, Card> {
     let mut map = HashMap::<usize, Card>::new();
@@ -272,7 +275,7 @@ pub struct DeserializedDeck {
     pub name: String,
 }
 
-fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> DeserializedDeck {
+fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> Result<DeserializedDeck, String> {
     let total_bytes = deck_bytes.len();
     let mut current_byte_index = 0 as usize;
     let version_and_heroes = deck_bytes.get(0).unwrap();
@@ -302,7 +305,7 @@ fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> DeserializedDeck {
 
     let mut heroes = Vec::<DeserializedHero>::new();
     let mut prev_card_base = 0;
-    for curr_hero in 0..num_heroes {
+    for _curr_hero in 0..num_heroes {
         let mut hero_turn = 0 as usize;
         let mut hero_card_id = 0 as usize;
         if !read_serialized_card(
@@ -313,11 +316,9 @@ fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> DeserializedDeck {
             &mut hero_turn,
             &mut hero_card_id,
         ) {
-            println!(
-                "error reading read_serialized_card, curr_hero: {}",
-                curr_hero
-            );
-            break;
+            return Err(format!(
+                "error during read_serialized_card, this is a bug if your ADC is confirmed valid, file bug report"
+            ));
         }
         heroes.push(DeserializedHero {
             id: hero_card_id,
@@ -358,11 +359,11 @@ fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> DeserializedDeck {
         String::from("")
     };
 
-    DeserializedDeck {
+    Ok(DeserializedDeck {
         heroes,
         cards,
         name,
-    }
+    })
 }
 
 fn read_bits_chunk(
