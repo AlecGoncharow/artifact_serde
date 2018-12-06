@@ -1,5 +1,5 @@
 //! # artifact_serde
-//! This is a small crate to handle deseralizing and potentially serializing Artifact Deck Codes
+//! This is a small crate to handle deseralizing and potentially serializing Artifact Deck Codes.\
 //! See this link for reference implementation: [link](https://github.com/ValveSoftware/ArtifactDeckCode)
 //!
 
@@ -154,7 +154,10 @@ pub struct Reference {
 /// Takes in an Artifact Deck Code as a &str and returns a DeserializedDeck matching the structure
 /// refer to deck_decoder.php for reference implementation and expected structure
 /// [here](https://github.com/ValveSoftware/ArtifactDeckCode)
-/// or specifially:
+/// # Example:  
+/// ```
+/// artifact_serde::decode("ADCJWkTZX05uwGDCRV4XQGy3QGLmqUBg4GQJgGLGgO7AaABR3JlZW4vQmxhY2sgRXhhbXBsZQ__");
+/// ```
 
 pub fn decode(adc: &str) -> DeserializedDeck {
     let re = Regex::new(r"^ADC").unwrap();
