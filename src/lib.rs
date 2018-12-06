@@ -18,14 +18,14 @@ pub struct CardSetJson {
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CardSet {
-    pub version: usize,
+    pub version: u32,
     pub set_info: SetInfo,
     pub card_list: Vec<Card>,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SetInfo {
-    pub set_id: usize,
-    pub pack_item_def: usize,
+    pub set_id: u32,
+    pub pack_item_def: u32,
     pub name: TranslatedText,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -89,8 +89,8 @@ pub struct TranslatedText {
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Card {
-    pub card_id: usize,
-    pub base_card_id: usize,
+    pub card_id: u32,
+    pub base_card_id: u32,
     pub card_type: String,
     #[serde(default)]
     pub sub_type: String,
@@ -110,24 +110,24 @@ pub struct Card {
     #[serde(default)]
     pub is_black: bool,
     #[serde(default)]
-    pub gold_cost: usize,
+    pub gold_cost: u32,
     #[serde(default)]
-    pub mana_cost: usize,
+    pub mana_cost: u32,
     #[serde(default)]
-    pub attack: usize,
+    pub attack: u32,
     #[serde(default)]
-    pub hit_points: usize,
+    pub hit_points: u32,
     pub references: Vec<Reference>,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct HeroCard {
     pub card: Card,
-    pub turn: usize,
+    pub turn: u32,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CardCard {
     pub card: Card,
-    pub count: usize,
+    pub count: u32,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Deck {
@@ -144,11 +144,11 @@ pub struct Image {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Reference {
     #[serde(default)]
-    pub card_id: usize,
+    pub card_id: u32,
     #[serde(default)]
     pub ref_type: String,
     #[serde(default)]
-    pub count: usize,
+    pub count: u32,
 }
 
 /// Takes in an Artifact Deck Code as a &str and returns a DeserializedDeck matching the structure
@@ -168,7 +168,8 @@ pub fn decode(adc: &str) -> Result<DeserializedDeck, String> {
             '-' => '/',
             '_' => '=',
             _ => x,
-        }).collect();
+        })
+        .collect();
 
     let adc_string = String::from(stripped_adc);
     let decoded = base64::decode(&adc_string).unwrap();
@@ -176,7 +177,9 @@ pub fn decode(adc: &str) -> Result<DeserializedDeck, String> {
 }
 
 /// Takes in a vector of JSON formatted &str and attempts to coerce them into CardSetJson,
-/// the JSON should take the form mentioned
+/// if successful, will return a HashMap, mapping card_ids to Cards. This is useful for
+/// interpretting the output from the decode function. \
+/// The JSON should take the form mentioned
 /// [here](https://github.com/ValveSoftware/ArtifactDeckCode) or:
 /// ```ignore
 ///{
@@ -253,20 +256,20 @@ fn set_up_deck_map(sets: Vec<CardSet>) -> HashMap<usize, Card> {
     let mut map = HashMap::<usize, Card>::new();
     for set in sets {
         for card in set.card_list {
-            map.insert(card.card_id, card);
+            map.insert(card.card_id as usize, card);
         }
     }
     map
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DeserializedHero {
-    pub id: usize,
-    pub turn: usize,
+    pub id: u32,
+    pub turn: u32,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DeserializedCard {
-    pub id: usize,
-    pub count: usize,
+    pub id: u32,
+    pub count: u32,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DeserializedDeck {
@@ -276,8 +279,8 @@ pub struct DeserializedDeck {
 }
 
 fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> Result<DeserializedDeck, String> {
-    let total_bytes = deck_bytes.len();
-    let mut current_byte_index = 0 as usize;
+    let total_bytes = deck_bytes.len() as u32;
+    let mut current_byte_index = 0 as u32;
     let version_and_heroes = deck_bytes.get(0).unwrap();
     current_byte_index += 1;
 
@@ -288,30 +291,30 @@ fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> Result<DeserializedDec
 
     let total_card_bytes = if version > 1 as u8 {
         current_byte_index += 1;
-        total_bytes - *deck_bytes.get(2).unwrap() as usize
+        total_bytes - *deck_bytes.get(2).unwrap() as u32
     } else {
         total_bytes
     };
 
     let mut num_heroes = 0;
     read_encoded_u32(
-        *version_and_heroes as usize,
+        *version_and_heroes as u32,
         3,
         &deck_bytes,
         &mut current_byte_index,
-        total_card_bytes as usize,
+        total_card_bytes as u32,
         &mut num_heroes,
     );
 
     let mut heroes = Vec::<DeserializedHero>::new();
     let mut prev_card_base = 0;
     for _curr_hero in 0..num_heroes {
-        let mut hero_turn = 0 as usize;
-        let mut hero_card_id = 0 as usize;
+        let mut hero_turn = 0 as u32;
+        let mut hero_card_id = 0 as u32;
         if !read_serialized_card(
             &deck_bytes,
             &mut current_byte_index,
-            total_card_bytes as usize,
+            total_card_bytes as u32,
             &mut prev_card_base,
             &mut hero_turn,
             &mut hero_card_id,
@@ -328,13 +331,13 @@ fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> Result<DeserializedDec
 
     let mut cards = Vec::<DeserializedCard>::new();
     prev_card_base = 0;
-    while current_byte_index < total_card_bytes as usize {
+    while current_byte_index < total_card_bytes as u32 {
         let mut card_count = 0;
         let mut card_id = 0;
         if !read_serialized_card(
             &deck_bytes,
             &mut current_byte_index,
-            total_card_bytes as usize,
+            total_card_bytes as u32,
             &mut prev_card_base,
             &mut card_count,
             &mut card_id,
@@ -352,7 +355,7 @@ fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> Result<DeserializedDec
     }
 
     let name = if current_byte_index <= total_card_bytes {
-        let bytes = &deck_bytes[total_card_bytes..];
+        let bytes = &deck_bytes[total_card_bytes as usize..];
         let out: String = bytes.iter().map(|x| *x as char).collect();
         out
     } else {
@@ -366,26 +369,21 @@ fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> Result<DeserializedDec
     })
 }
 
-fn read_bits_chunk(
-    n_chunk: usize,
-    n_bits: usize,
-    n_curr_shift: usize,
-    n_out_bits: &mut usize,
-) -> bool {
+fn read_bits_chunk(n_chunk: u32, n_bits: u32, n_curr_shift: u32, n_out_bits: &mut u32) -> bool {
     let continue_bit = 1 << n_bits;
     let new_bits = n_chunk & (continue_bit - 1);
-    *n_out_bits |= (new_bits << n_curr_shift) as usize;
+    *n_out_bits |= (new_bits << n_curr_shift) as u32;
 
     n_chunk & continue_bit != 0
 }
 
 fn read_encoded_u32(
-    base_value: usize,
-    base_bits: usize,
+    base_value: u32,
+    base_bits: u32,
     deck_bytes: &Vec<u8>,
-    start_index: &mut usize,
-    end_index: usize,
-    out_value: &mut usize,
+    start_index: &mut u32,
+    end_index: u32,
+    out_value: &mut u32,
 ) {
     *out_value = 0;
     let mut delta_shift = 0;
@@ -397,9 +395,9 @@ fn read_encoded_u32(
                 break;
             }
 
-            let next_byte = deck_bytes.get(*start_index).unwrap();
+            let next_byte = deck_bytes.get(*start_index as usize).unwrap();
             *start_index += 1;
-            if !read_bits_chunk(*next_byte as usize, 7, delta_shift, out_value) {
+            if !read_bits_chunk(*next_byte as u32, 7, delta_shift, out_value) {
                 break;
             }
 
@@ -410,11 +408,11 @@ fn read_encoded_u32(
 
 fn read_serialized_card(
     deck_bytes: &Vec<u8>,
-    start_index: &mut usize,
-    end_index: usize,
-    prev_card_base: &mut usize,
-    out_count: &mut usize,
-    out_id: &mut usize,
+    start_index: &mut u32,
+    end_index: u32,
+    prev_card_base: &mut u32,
+    out_count: &mut u32,
+    out_id: &mut u32,
 ) -> bool {
     //end of the memory block?
     if *start_index > end_index {
@@ -424,7 +422,7 @@ fn read_serialized_card(
     //header contains the count (2 bits), a continue flag, and 5 bits of offset data.
     //If we have 11 for the count bits we have the count
     //encoded after the offset
-    let header = deck_bytes.get(*start_index).unwrap();
+    let header = deck_bytes.get(*start_index as usize).unwrap();
     *start_index += 1;
 
     let has_extended_count = (header >> 6) == 0x03 as u8;
@@ -432,7 +430,7 @@ fn read_serialized_card(
     //read in the delta, which has 5 bits in the header, then additional bytes while the value is set
     let mut card_delta = 0;
     read_encoded_u32(
-        *header as usize,
+        *header as u32,
         5,
         &deck_bytes,
         start_index,
@@ -449,7 +447,7 @@ fn read_serialized_card(
         }
         false => {
             //the count is just the upper two bits + 1 (since we don't encode zero)
-            *out_count = (header >> 6) as usize + 1;
+            *out_count = (header >> 6) as u32 + 1;
         }
     }
 
