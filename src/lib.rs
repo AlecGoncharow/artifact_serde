@@ -155,6 +155,26 @@ pub struct Reference {
 /// refer to deck_decoder.php for reference implementation and expected structure
 /// [here](https://github.com/ValveSoftware/ArtifactDeckCode)
 /// or specifially:
+
+pub fn decode(adc: &str) -> DeserializedDeck {
+    let re = Regex::new(r"^ADC").unwrap();
+    let mut stripped_adc = re.replace_all(adc, "");
+    stripped_adc = stripped_adc
+        .chars()
+        .map(|x| match x {
+            '-' => '/',
+            '_' => '=',
+            _ => x,
+        }).collect();
+
+    let adc_string = String::from(stripped_adc);
+    let decoded = base64::decode(&adc_string).unwrap();
+    parse_deck(adc_string, decoded)
+}
+
+/// Takes in a vector of JSON formatted &str and attempts to coerce them into CardSetJson,
+/// the JSON should take the form mentioned
+/// [here](https://github.com/ValveSoftware/ArtifactDeckCode) or:
 /// ```ignore
 ///{
 ///  "card_set": {
@@ -209,25 +229,6 @@ pub struct Reference {
 ///}
 ///```
 ///
-pub fn decode(adc: &str) -> DeserializedDeck {
-    let re = Regex::new(r"^ADC").unwrap();
-    let mut stripped_adc = re.replace_all(adc, "");
-    stripped_adc = stripped_adc
-        .chars()
-        .map(|x| match x {
-            '-' => '/',
-            '_' => '=',
-            _ => x,
-        }).collect();
-
-    let adc_string = String::from(stripped_adc);
-    let decoded = base64::decode(&adc_string).unwrap();
-    parse_deck(adc_string, decoded)
-}
-
-/// Takes in a vector of JSON formatted &str and attempts to coerce them into CardSetJson,
-/// the JSON should take the form mentioned
-/// [here](https://github.com/ValveSoftware/ArtifactDeckCode)
 pub fn json_to_deck_hashmap(sets: Vec<&str>) -> HashMap<usize, Card> {
     let mut d_sets = Vec::new();
     for set in sets {
