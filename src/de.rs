@@ -5,7 +5,7 @@ use std::collections::HashMap;
 /// [here](https://github.com/ValveSoftware/ArtifactDeckCode)
 /// # Example  
 /// ```
-/// artifact_serde::decode("ADCJWkTZX05uwGDCRV4XQGy3QGLmqUBg4GQJgGLGgO7AaABR3JlZW4vQmxhY2sgRXhhbXBsZQ__");
+/// artifact_serde::de::decode("ADCJWkTZX05uwGDCRV4XQGy3QGLmqUBg4GQJgGLGgO7AaABR3JlZW4vQmxhY2sgRXhhbXBsZQ__");
 /// ```
 
 pub fn decode(adc: &str) -> Result<DeserializedDeck, String> {

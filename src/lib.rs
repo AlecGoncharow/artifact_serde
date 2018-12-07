@@ -145,6 +145,17 @@ pub struct Reference {
     pub count: usize,
 }
 
+/// Takes in an Artifact Deck Code as a &str and returns a DeserializedDeck matching the structure
+/// refer to deck_decoder.php for reference implementation and expected structure
+/// [here](https://github.com/ValveSoftware/ArtifactDeckCode)
+/// # Example  
+/// ```
+/// artifact_serde::decode("ADCJWkTZX05uwGDCRV4XQGy3QGLmqUBg4GQJgGLGgO7AaABR3JlZW4vQmxhY2sgRXhhbXBsZQ__");
+/// ```
+pub fn decode(adc: &str) -> Result<de::DeserializedDeck, String> {
+    de::decode(adc)
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
