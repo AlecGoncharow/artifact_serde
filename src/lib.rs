@@ -1,7 +1,9 @@
 //! # artifact_serde
 //! This is a small crate to handle deseralizing and potentially serializing Artifact Deck Codes.\
 //! See this link for reference implementation: [link](https://github.com/ValveSoftware/ArtifactDeckCode)
-//!
+//! \
+//! Most structs in this crate will mimic the JSON structure provided by Valve, either by API or
+//! base64 encoding.
 #[macro_use]
 extern crate serde_derive;
 pub mod de;
@@ -12,14 +14,14 @@ pub struct CardSetJson {
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CardSet {
-    pub version: usize,
+    pub version: u32,
     pub set_info: SetInfo,
     pub card_list: Vec<Card>,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SetInfo {
-    pub set_id: usize,
-    pub pack_item_def: usize,
+    pub set_id: u32,
+    pub pack_item_def: u32,
     pub name: TranslatedText,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -83,8 +85,8 @@ pub struct TranslatedText {
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Card {
-    pub card_id: usize,
-    pub base_card_id: usize,
+    pub card_id: u32,
+    pub base_card_id: u32,
     pub card_type: String,
     #[serde(default)]
     pub sub_type: String,
@@ -104,24 +106,24 @@ pub struct Card {
     #[serde(default)]
     pub is_black: bool,
     #[serde(default)]
-    pub gold_cost: usize,
+    pub gold_cost: u32,
     #[serde(default)]
-    pub mana_cost: usize,
+    pub mana_cost: u32,
     #[serde(default)]
-    pub attack: usize,
+    pub attack: u32,
     #[serde(default)]
-    pub hit_points: usize,
+    pub hit_points: u32,
     pub references: Vec<Reference>,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct HeroCard {
     pub card: Card,
-    pub turn: usize,
+    pub turn: u32,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CardCard {
     pub card: Card,
-    pub count: usize,
+    pub count: u32,
 }
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Deck {
@@ -138,11 +140,11 @@ pub struct Image {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Reference {
     #[serde(default)]
-    pub card_id: usize,
+    pub card_id: u32,
     #[serde(default)]
     pub ref_type: String,
     #[serde(default)]
-    pub count: usize,
+    pub count: u32,
 }
 
 /// Takes in an Artifact Deck Code as a &str and returns a DeserializedDeck matching the structure
