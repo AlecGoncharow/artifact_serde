@@ -45,4 +45,4 @@ fn main() {
   let my_card_set: artifact_serde::CardSetJson = match serde_json::from_reader(my_json_card_set).unwrap();
 }
 ```
-All the structs follow the same structure found in Valve's JSON, documented [here](https://docs.rs/artifact_serde)
+All the structs follow the same structure found in Valve's JSON, documented [here](https://docs.rs/artifact_serde/*/artifact_serde/struct.CardSetJson.html)
