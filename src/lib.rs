@@ -159,6 +159,24 @@ pub fn decode(adc: &str) -> Result<de::DeserializedDeck, String> {
     de::decode(adc)
 }
 
+/// Takes in a mutable reference to a [DeserializedDeck](struct.DeserializedDeck.html) returns
+/// the corresponding Artifact Deck Code refer to deck_encoder.php for reference implementation
+/// [here](https://github.com/ValveSoftware/ArtifactDeckCode)
+/// # Example  
+/// ```
+/// let mut my_deck = artifact_serde::decode("ADCJWkTZX05uwGDCRV4XQGy3QGLmqUBg4GQJgGLGgO7AaABR3JlZW4vQmxhY2sgRXhhbXBsZQ__").unwrap();
+/// let my_adc = artifact_serde::encode(&mut my_deck).unwrap();
+/// ```
+pub fn encode(deck: &mut de::DeserializedDeck) -> Result<String, String> {
+    ser::encode(deck)
+}
+
+/// Takes in a mutable reference to a [Deck](struct.Deck.html) returns
+/// the corresponding Artifact Deck Code refer to deck_encoder.php for reference implementation
+pub fn encode_from_deck(deck: &crate::Deck) -> Result<String, String> {
+    ser::encode_from_deck(deck)
+}
+
 #[cfg(test)]
 mod tests {
     #[test]

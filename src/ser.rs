@@ -1,13 +1,53 @@
-use super::de::DeserializedDeck;
+use super::de::{DeserializedCard, DeserializedDeck, DeserializedHero};
 
 const CURRENT_VERSION: u8 = 2;
 const ENCODED_PREFIX: &str = "ADC";
 const HEADER_SIZE: u32 = 3;
 
+/// Takes in a mutable reference to a [DeserializedDeck](struct.DeserializedDeck.html) returns
+/// the corresponding Artifact Deck Code refer to deck_encoder.php for reference implementation
+/// [here](https://github.com/ValveSoftware/ArtifactDeckCode)
+/// # Example  
+/// ```
+/// let mut my_deck = artifact_serde::de::decode("ADCJWkTZX05uwGDCRV4XQGy3QGLmqUBg4GQJgGLGgO7AaABR3JlZW4vQmxhY2sgRXhhbXBsZQ__").unwrap();
+/// let my_adc = artifact_serde::ser::encode(&mut my_deck).unwrap();
+/// ```
 pub fn encode(deck: &mut DeserializedDeck) -> Result<String, String> {
     let bytes = encode_bytes(deck).unwrap();
 
-    Ok(encode_bytes_to_string(&bytes).unwrap())
+    encode_bytes_to_string(&bytes)
+}
+
+/// Takes in a mutable reference to a [Deck](struct.Deck.html) returns
+/// the corresponding Artifact Deck Code refer to deck_encoder.php for reference implementation
+pub fn encode_from_deck(deck: &crate::Deck) -> Result<String, String> {
+    let mut de_deck = DeserializedDeck::new();
+    let mut refs: Vec<u32> = Vec::new();
+
+    for hero in &deck.heroes {
+        de_deck.heroes.push(DeserializedHero {
+            id: hero.card.card_id,
+            turn: hero.turn,
+        });
+        for reference in &hero.card.references {
+            refs.push(reference.card_id);
+        }
+    }
+
+    for card in &deck.cards {
+        match refs.contains(&card.card.card_id) {
+            true => continue,
+            false => {
+                de_deck.cards.push(DeserializedCard {
+                    id: card.card.card_id,
+                    count: card.count,
+                });
+            }
+        }
+    }
+    de_deck.name = deck.name.clone();
+
+    encode(&mut de_deck)
 }
 
 fn encode_bytes_to_string(bytes: &Vec<u8>) -> Result<String, String> {

@@ -29,7 +29,7 @@ pub fn decode(adc: &str) -> Result<DeserializedDeck, String> {
 /// Takes in a vector of JSON formatted &str and attempts to coerce them into CardSetJson,
 /// if successful, maps card_ids to Cards.\
 /// The JSON should take the form mentioned
-/// [here](https://github.com/ValveSoftware/ArtifactDeckCode) or:
+/// [here](https://github.com/ValveSoftware/ArtifactDeckCode)
 /// ```ignore
 ///{
 ///  "card_set": {
@@ -84,7 +84,9 @@ pub fn decode(adc: &str) -> Result<DeserializedDeck, String> {
 ///}
 ///```
 ///
-pub fn map_card_ids_to_cards(sets: Vec<&str>) -> Result<HashMap<u32, crate::Card>, String> {
+pub fn map_card_ids_to_cards_from_str(
+    sets: Vec<&str>,
+) -> Result<HashMap<u32, crate::Card>, String> {
     let mut d_sets = Vec::new();
     for set in sets {
         let s: crate::CardSetJson = match serde_json::from_str(set) {
@@ -163,6 +165,16 @@ pub struct DeserializedDeck {
     pub heroes: Vec<DeserializedHero>,
     pub cards: Vec<DeserializedCard>,
     pub name: String,
+}
+
+impl DeserializedDeck {
+    pub fn new() -> Self {
+        Self {
+            heroes: Vec::new(),
+            cards: Vec::new(),
+            name: String::from(""),
+        }
+    }
 }
 
 fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> Result<DeserializedDeck, String> {
