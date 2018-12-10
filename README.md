@@ -1,9 +1,10 @@
 # artifact_serde
-[![Build Status](https://travis-ci.com/AlecGoncharow/artifact_serde.svg?branch=master)](https://travis-ci.com/AlecGoncharow/artifact_serde)
-[![crates.io](https://img.shields.io/crates/v/artifact_serde.svg)](https://crates.io/crates/artifact_serde)
-[![docs](https://docs.rs/artifact_serde/badge.svg)](https://docs.rs/artifact_serde/)
-
-Small Rust library for serializing [Artifact](https://playartifact.com) decks and deserialzing Artifact Deck Codes. 
+<p align="center">
+  <a href="https://travis-ci.com/AlecGoncharow/artifact_serde"><img src="https://travis-ci.com/AlecGoncharow/artifact_serde.svg?branch=master" alt="Build Status"></a>
+  <a href="https://crates.io/crates/artifact_serde"><img src="https://img.shields.io/crates/v/artifact_serde.svg" alt="crates.io"></a>
+  <a href="https://docs.rs/artifact_serde/"><img src="https://docs.rs/artifact_serde/badge.svg" alt="docs"></a><br>
+  A small Rust library for serializing <a href="https://playartifact.com">Artifact</a> decks and deserialzing Artifact Deck Codes. 
+</p>
 
 # Usage
 The API is still a bit unstable while I figure out the best way to handle certain aspects beyond just decoding and encoding Artifact Deck Codes. The API for basic decoding and encoding should remain relatively stable.  
@@ -39,7 +40,6 @@ The library currently handles deserializing the JSON provided by Valve's card se
 by grabbing the JSON somehow and using `serde_json` to deserialize it, example using a stored JSON file: 
 ```rust
 use std::fs::File;
-
 fn main() {
   let my_json_card_set = File::open("Path/To/File").expect("File Not Found");
   let my_card_set: artifact_serde::CardSetJson = serde_json::from_reader(my_json_card_set).unwrap();
