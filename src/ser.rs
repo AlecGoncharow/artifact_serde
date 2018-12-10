@@ -3,9 +3,13 @@ use super::de::DeserializedDeck;
 const CURRENT_VERSION: u8 = 2;
 const ENCODED_PREFIX: &str = "ADC";
 const MAX_BYTES_FOR_VAR_U32: u8 = 5;
-const HEADER_SIZE: u8 = 3;
+const HEADER_SIZE: u32 = 3;
 
 pub fn encode(deck: &mut DeserializedDeck) -> Result<String, String> {
+    Err(String::from("not implemented"))
+}
+
+fn encode_bytes_to_string(bytes: &mut Vec<u8>) -> Result<String, String> {
     Err(String::from("not implemented"))
 }
 
@@ -57,12 +61,31 @@ fn encode_bytes(deck: &mut DeserializedDeck) -> Result<Vec<u8>, String> {
 
     // reset our card offset
     prev_card_id = 0;
+
     for card in &deck.cards {
         add_card_to_buffer(card.count, card.id - prev_card_id, &mut bytes);
         prev_card_id = card.id;
     }
 
-    Err(String::from(""))
+    // save off pre string bytes for checksum
+    let pre_string_byte_count = bytes.len();
+
+    // write the string
+    let name_bytes = safe_name.as_bytes();
+    for byte in name_bytes {
+        bytes.push(*byte);
+    }
+
+    let full_checksum = compute_checksum(&bytes, pre_string_byte_count as u32 - HEADER_SIZE);
+    let small_checksum = full_checksum & 0x0FF;
+
+    // borrow checksum index and overwrite value with real checksum
+    {
+        let checksum_ref = &mut bytes[checksum_byte];
+        *checksum_ref = small_checksum as u8;
+    }
+
+    Ok(bytes)
 }
 
 fn extract_n_bits_with_carry(value: u32, num_bits: u8) -> u8 {
@@ -127,4 +150,14 @@ fn add_card_to_buffer(count: u32, value: u32, bytes: &mut Vec<u8>) {
     if count_end - count_start > 11 {
         panic!("something went horribly wrong, per reference");
     }
+}
+
+fn compute_checksum(bytes: &Vec<u8>, num_bytes: u32) -> u32 {
+    let mut checksum = 0;
+
+    for add_check in HEADER_SIZE..num_bytes + HEADER_SIZE {
+        checksum = checksum + *bytes.get(add_check as usize).unwrap() as u32;
+    }
+
+    checksum
 }
