@@ -5,10 +5,12 @@ const ENCODED_PREFIX: &str = "ADC";
 const HEADER_SIZE: u32 = 3;
 
 pub fn encode(deck: &mut DeserializedDeck) -> Result<String, String> {
-    Err(String::from("not implemented"))
+    let bytes = encode_bytes(deck).unwrap();
+
+    Ok(encode_bytes_to_string(&bytes).unwrap())
 }
 
-fn encode_bytes_to_string(bytes: &mut Vec<u8>) -> Result<String, String> {
+fn encode_bytes_to_string(bytes: &Vec<u8>) -> Result<String, String> {
     let byte_count = bytes.len();
     if byte_count == 0 {
         return Err(String::from("Something broke in generating bytes"));

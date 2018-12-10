@@ -165,4 +165,20 @@ mod tests {
     fn it_works() {
         assert_eq!(2 + 2, 4);
     }
+
+    #[test]
+    fn decode_to_encode() {
+        let mut deck = super::decode(
+            "ADCJWkTZX05uwGDCRV4XQGy3QGLmqUBg4GQJgGLGgO7AaABR3JlZW4vQmxhY2sgRXhhbXBsZQ__",
+        )
+        .unwrap();
+
+        let string = super::ser::encode(&mut deck).unwrap();
+        println!("{}", string);
+
+        assert_eq!(
+            string.as_str(),
+            "ADCJWkTZX05uwGDCRV4XQGy3QGLmqUBg4GQJgGLGgO7AaABR3JlZW4vQmxhY2sgRXhhbXBsZQ__"
+        );
+    }
 }
