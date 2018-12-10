@@ -1,4 +1,4 @@
-use super::de::{DeserializedCard, DeserializedDeck, DeserializedHero};
+use crate::de::{DeserializedCard, DeserializedDeck, DeserializedHero};
 
 const CURRENT_VERSION: u8 = 2;
 const ENCODED_PREFIX: &str = "ADC";
@@ -13,6 +13,13 @@ const HEADER_SIZE: u32 = 3;
 /// let my_adc = artifact_serde::ser::encode(&mut my_deck).unwrap();
 /// ```
 pub fn encode(deck: &mut DeserializedDeck) -> Result<String, String> {
+    if deck.heroes.len() != 5 {
+        return Err(String::from("Decks must have 5 heroes"));
+    }
+    if deck.cards.len() == 0 {
+        return Err(String::from("Decks must have cards"));
+    }
+
     let bytes = encode_bytes(deck).unwrap();
 
     encode_bytes_to_string(&bytes)
@@ -53,7 +60,9 @@ pub fn encode_from_deck(deck: &crate::Deck) -> Result<String, String> {
 fn encode_bytes_to_string(bytes: &Vec<u8>) -> Result<String, String> {
     let byte_count = bytes.len();
     if byte_count == 0 {
-        return Err(String::from("Something broke in generating bytes"));
+        return Err(String::from(
+            "No bytes were encoded, did you pass a non-empty deck?",
+        ));
     }
 
     let encoded = base64::encode(&bytes);

@@ -26,6 +26,10 @@ pub fn decode(adc: &str) -> Result<DeserializedDeck, String> {
     parse_deck(adc_string, decoded)
 }
 
+pub fn decode_from_string(adc: &String) -> Result<DeserializedDeck, String> {
+    decode(adc.as_str())
+}
+
 /// Takes in a vector of JSON formatted &str and attempts to coerce them into CardSetJson,
 /// if successful, maps card_ids to Cards.\
 /// The JSON should take the form mentioned

@@ -133,6 +133,16 @@ pub struct Deck {
     pub cards: Vec<CardCard>,
 }
 
+impl Deck {
+    pub fn new() -> Self {
+        Self {
+            name: String::from(""),
+            heroes: Vec::new(),
+            cards: Vec::new(),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Image {
     #[serde(default)]
@@ -186,18 +196,56 @@ mod tests {
 
     #[test]
     fn decode_to_encode() {
-        let mut deck = super::decode(
+        let mut deck = crate::decode(
             "ADCJWkTZX05uwGDCRV4XQGy3QGLmqUBg4GQJgGLGgO7AaABR3JlZW4vQmxhY2sgRXhhbXBsZQ__",
         )
         .unwrap();
-        println!("{:?}", deck);
 
-        let string = super::ser::encode(&mut deck).unwrap();
-        println!("{}", string);
-
+        let string = crate::ser::encode(&mut deck).unwrap();
         assert_eq!(
             string.as_str(),
             "ADCJWkTZX05uwGDCRV4XQGy3QGLmqUBg4GQJgGLGgO7AaABR3JlZW4vQmxhY2sgRXhhbXBsZQ__"
         );
+    }
+
+    #[test]
+    fn decode_deck_from_json_file() {
+        use std::fs::File;
+        let json_file = File::open("tests/data/deck_one.json").expect("file not found");
+
+        let deck: crate::Deck = serde_json::from_reader(json_file).unwrap();
+        let string = crate::ser::encode_from_deck(&deck).unwrap();
+        assert_eq!(
+            string.as_str(),
+            "ADCJWkTZX05uwGDCRV4XQGy3QGLmqUBg4GQJgGLGgO7AaABR3JlZW4vQmxhY2sgRXhhbXBsZQ__"
+        );
+    }
+
+    #[test]
+    fn empty_deck_encode_err() {
+        let deck = crate::Deck::new();
+        match crate::ser::encode_from_deck(&deck) {
+            Ok(_) => panic!("This should not happen"),
+            Err(_) => (),
+        };
+
+        let mut de_deck = crate::de::DeserializedDeck::new();
+        match crate::ser::encode(&mut de_deck) {
+            Ok(_) => panic!("This should not happen"),
+            Err(_) => (),
+        };
+    }
+
+    #[test]
+    fn sanatize_bad_name() {
+        use std::fs::File;
+        let json_file = File::open("tests/data/deck_one.json").expect("file not found");
+
+        let mut deck: crate::Deck = serde_json::from_reader(json_file).unwrap();
+        deck.name = String::from("<script>things</script>");
+        let string = crate::ser::encode_from_deck(&deck).unwrap();
+        let de_deck = crate::de::decode_from_string(&string).unwrap();
+
+        assert_eq!(de_deck.name.as_str(), "things");
     }
 }
