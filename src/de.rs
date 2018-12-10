@@ -1,5 +1,4 @@
 use std::cmp::Ordering;
-use std::collections::HashMap;
 
 /// Takes in an Artifact Deck Code as a &str and returns a DeserializedDeck matching the structure
 /// refer to deck_decoder.php for reference implementation and expected structure
@@ -30,92 +29,6 @@ pub fn decode_from_string(adc: &String) -> Result<DeserializedDeck, String> {
     decode(adc.as_str())
 }
 
-/// Takes in a vector of JSON formatted &str and attempts to coerce them into CardSetJson,
-/// if successful, maps card_ids to Cards.\
-/// The JSON should take the form mentioned
-/// [here](https://github.com/ValveSoftware/ArtifactDeckCode)
-/// ```ignore
-///{
-///  "card_set": {
-///    "version": 1,
-///  "set_info": {
-///   "set_id": 0,
-///    "pack_item_def": 0,
-///     "name": {
-///        "english": "Base Set"
-///      }
-///    },
-///   "card_list": [{
-///
-///   "card_id": 4000,
-///   "base_card_id": 4000,
-///    "card_type": "Hero",
-///   "card_name": {
-///     "english": "Farvhan the Dreamer"
-///  },
-///   "card_text": {
-///      "english": "Pack Leadership<BR>\nFarvhan the Dreamer's allied neighbors have +1 Armor."
-///    },
-///     "mini_image": {
-///       "default": "<url to png>"
-///     },
-///    "large_image": {
-///       "default": "<url to png>"
-///      },
-///     "ingame_image": {
-///       "default": "<url to png>"
-///    },
-///    "is_green": true,
-///    "attack": 4,
-///    "hit_points": 10,
-///      "references": [{
-///      "card_id": 4002,
-///        "ref_type": "includes",
-///          "count": 3
-///  },
-///        {
-///        "card_id": 4001,
-///      "ref_type": "passive_ability"
-///        }
-///    ]
-///
-///
-///    },
-///    ..... more cards ....
-///
-///    ]
-///  }
-///}
-///```
-///
-pub fn map_card_ids_to_cards_from_str(
-    sets: Vec<&str>,
-) -> Result<HashMap<u32, crate::Card>, String> {
-    let mut d_sets = Vec::new();
-    for set in sets {
-        let s: crate::CardSetJson = match serde_json::from_str(set) {
-            Ok(s) => s,
-            Err(e) => {
-                let error_string = format!("Invalid JSON input: {}", e);
-                return Err(error_string);
-            }
-        };
-
-        let d = s.card_set;
-        d_sets.push(d);
-    }
-
-    Ok(set_up_deck_map(d_sets))
-}
-pub fn set_up_deck_map(sets: Vec<crate::CardSet>) -> HashMap<u32, crate::Card> {
-    let mut map = HashMap::<u32, crate::Card>::new();
-    for set in sets {
-        for card in set.card_list {
-            map.insert(card.card_id, card);
-        }
-    }
-    map
-}
 #[derive(Serialize, Deserialize, Debug, Eq)]
 pub struct DeserializedHero {
     pub id: u32,
