@@ -172,6 +172,7 @@ mod tests {
             "ADCJWkTZX05uwGDCRV4XQGy3QGLmqUBg4GQJgGLGgO7AaABR3JlZW4vQmxhY2sgRXhhbXBsZQ__",
         )
         .unwrap();
+        println!("{:?}", deck);
 
         let string = super::ser::encode(&mut deck).unwrap();
         println!("{}", string);
