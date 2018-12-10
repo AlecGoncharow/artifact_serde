@@ -6,7 +6,9 @@
 //! base64 encoding.
 #[macro_use]
 extern crate serde_derive;
+extern crate ammonia;
 pub mod de;
+pub mod ser;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CardSetJson {

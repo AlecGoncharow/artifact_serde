@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 
 /// Takes in an Artifact Deck Code as a &str and returns a DeserializedDeck matching the structure
@@ -109,16 +110,54 @@ fn set_up_deck_map(sets: Vec<crate::CardSet>) -> HashMap<u32, crate::Card> {
     }
     map
 }
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Eq)]
 pub struct DeserializedHero {
     pub id: u32,
     pub turn: u32,
 }
-#[derive(Serialize, Deserialize, Debug)]
+
+impl Ord for DeserializedHero {
+    fn cmp(&self, other: &DeserializedHero) -> Ordering {
+        self.id.cmp(&other.id)
+    }
+}
+
+impl PartialOrd for DeserializedHero {
+    fn partial_cmp(&self, other: &DeserializedHero) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for DeserializedHero {
+    fn eq(&self, other: &DeserializedHero) -> bool {
+        self.id == other.id
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Eq)]
 pub struct DeserializedCard {
     pub id: u32,
     pub count: u32,
 }
+
+impl Ord for DeserializedCard {
+    fn cmp(&self, other: &DeserializedCard) -> Ordering {
+        self.id.cmp(&other.id)
+    }
+}
+
+impl PartialOrd for DeserializedCard {
+    fn partial_cmp(&self, other: &DeserializedCard) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for DeserializedCard {
+    fn eq(&self, other: &DeserializedCard) -> bool {
+        self.id == other.id
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DeserializedDeck {
     pub heroes: Vec<DeserializedHero>,
