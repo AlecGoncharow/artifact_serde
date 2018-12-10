@@ -8,7 +8,6 @@ license="MIT"
 
 [badges]
 maintenance = {status = "experimental"}
-travis-ci = { repository = "AlecGoncharow/artifact_serde", branch = "master" }
 
 [dependencies]
 ammonia = "1.2.0"

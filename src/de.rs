@@ -103,7 +103,7 @@ pub fn map_card_ids_to_cards_from_str(
 
     Ok(set_up_deck_map(d_sets))
 }
-fn set_up_deck_map(sets: Vec<crate::CardSet>) -> HashMap<u32, crate::Card> {
+pub fn set_up_deck_map(sets: Vec<crate::CardSet>) -> HashMap<u32, crate::Card> {
     let mut map = HashMap::<u32, crate::Card>::new();
     for set in sets {
         for card in set.card_list {
