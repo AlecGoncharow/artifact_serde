@@ -1,5 +1,5 @@
 //! # artifact_serde
-//! This is a small crate to handle deseralizing and potentially serializing Artifact Deck Codes.\
+//! This is a small crate to handle deseralizing and serializing Artifact Deck Codes.\
 //! See this link for reference implementation: [link](https://github.com/ValveSoftware/ArtifactDeckCode)
 //! \
 //! Most structs in this crate will mimic the JSON structure provided by Valve, either by API or
