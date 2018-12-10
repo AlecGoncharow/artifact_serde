@@ -2,7 +2,6 @@ use super::de::DeserializedDeck;
 
 const CURRENT_VERSION: u8 = 2;
 const ENCODED_PREFIX: &str = "ADC";
-const MAX_BYTES_FOR_VAR_U32: u8 = 5;
 const HEADER_SIZE: u32 = 3;
 
 pub fn encode(deck: &mut DeserializedDeck) -> Result<String, String> {
@@ -10,7 +9,26 @@ pub fn encode(deck: &mut DeserializedDeck) -> Result<String, String> {
 }
 
 fn encode_bytes_to_string(bytes: &mut Vec<u8>) -> Result<String, String> {
-    Err(String::from("not implemented"))
+    let byte_count = bytes.len();
+    if byte_count == 0 {
+        return Err(String::from("Something broke in generating bytes"));
+    }
+
+    let encoded = base64::encode(&bytes);
+
+    let mut deck_string = format!("{}{}", ENCODED_PREFIX, encoded);
+
+    // make string url safe
+    deck_string = deck_string
+        .chars()
+        .map(|x| match x {
+            '/' => '-',
+            '=' => '_',
+            _ => x,
+        })
+        .collect();
+
+    Ok(deck_string)
 }
 
 fn encode_bytes(deck: &mut DeserializedDeck) -> Result<Vec<u8>, String> {
