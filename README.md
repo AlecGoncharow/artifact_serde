@@ -42,7 +42,7 @@ use std::fs::File;
 
 fn main() {
   let my_json_card_set = File::open("Path/To/File").expect("File Not Found");
-  let my_card_set: artifact_serde::CardSetJson = match serde_json::from_reader(my_json_card_set).unwrap();
+  let my_card_set: artifact_serde::CardSetJson = serde_json::from_reader(my_json_card_set).unwrap();
 }
 ```
 All the structs follow the same structure found in Valve's JSON, documented [here](https://docs.rs/artifact_serde/*/artifact_serde/struct.CardSetJson.html)
