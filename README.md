@@ -1,6 +1,6 @@
 # artifact_serde [![Build Status](https://travis-ci.com/AlecGoncharow/artifact_serde.svg?branch=master)](https://travis-ci.com/AlecGoncharow/artifact_serde) [![crates.io](https://img.shields.io/crates/v/artifact_serde.svg)](https://crates.io/crates/artifact_serde) [![docs](https://docs.rs/artifact_serde/badge.svg)](https://docs.rs/artifact_serde/)
 
-A small Rust library for serializing [Artifact](https://playartifact.com) decks and deserialzing Artifact Deck Codes. 
+A small Rust library for serializing/deserialzing [Artifact](https://playartifact.com) Decks and Deck Codes.
 
 # Usage
 The API is still a bit unstable while I figure out the best way to handle certain aspects beyond just decoding and encoding Artifact Deck Codes. The API for basic decoding and encoding should remain relatively stable.  
