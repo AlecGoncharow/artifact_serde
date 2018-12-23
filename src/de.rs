@@ -10,9 +10,12 @@ use std::cmp::Ordering;
 /// ```
 
 pub fn decode(adc: &str) -> Result<DeserializedDeck, Error> {
-    let re = regex::Regex::new(r"^ADC").unwrap();
-    let mut stripped_adc = re.replace_all(adc, "");
-    stripped_adc = stripped_adc
+    let stripped_adc = if adc.starts_with("ADC") {
+        adc.get(3..).unwrap()
+    } else {
+        adc
+    };
+    let fixed_adc: String = stripped_adc
         .chars()
         .map(|x| match x {
             '-' => '/',
@@ -21,16 +24,11 @@ pub fn decode(adc: &str) -> Result<DeserializedDeck, Error> {
         })
         .collect();
 
-    let adc_string = String::from(stripped_adc);
-    let decoded = base64::decode(&adc_string).unwrap();
-    parse_deck(adc_string, decoded)
+    let decoded = base64::decode(&fixed_adc).unwrap();
+    parse_deck(&decoded)
 }
 
-pub fn decode_from_string(adc: &String) -> Result<DeserializedDeck, Error> {
-    decode(adc.as_str())
-}
-
-#[derive(Serialize, Deserialize, Debug, Eq)]
+#[derive(Serialize, Deserialize, Debug, Eq, Default)]
 pub struct DeserializedHero {
     pub id: u32,
     pub turn: u32,
@@ -54,7 +52,7 @@ impl PartialEq for DeserializedHero {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Eq)]
+#[derive(Serialize, Deserialize, Debug, Eq, Default)]
 pub struct DeserializedCard {
     pub id: u32,
     pub count: u32,
@@ -78,7 +76,7 @@ impl PartialEq for DeserializedCard {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct DeserializedDeck {
     pub heroes: Vec<DeserializedHero>,
     pub cards: Vec<DeserializedCard>,
@@ -95,29 +93,29 @@ impl DeserializedDeck {
     }
 }
 
-fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> Result<DeserializedDeck, Error> {
+fn parse_deck(deck_bytes: &[u8]) -> Result<DeserializedDeck, Error> {
     let total_bytes = deck_bytes.len();
     let mut current_byte_index = 0 as usize;
-    let version_and_heroes = deck_bytes.get(0).unwrap();
+    let version_and_heroes = deck_bytes[0];
     current_byte_index += 1;
 
-    let version = deck_bytes.get(0).unwrap() >> 4;
+    let version = version_and_heroes >> 4;
 
-    let _checksum = deck_bytes.get(1).unwrap();
+    let _checksum = deck_bytes[1];
     current_byte_index += 1;
 
     let total_card_bytes = if version > 1u8 {
         current_byte_index += 1;
-        total_bytes - *deck_bytes.get(2).unwrap() as usize
+        total_bytes - deck_bytes[2] as usize
     } else {
         total_bytes
     };
 
     let mut num_heroes = 0;
     read_encoded_u32(
-        *version_and_heroes as u32,
+        u32::from(version_and_heroes),
         3,
-        &deck_bytes,
+        deck_bytes,
         &mut current_byte_index,
         total_card_bytes,
         &mut num_heroes,
@@ -129,7 +127,7 @@ fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> Result<DeserializedDec
         let mut hero_turn = 0 as u32;
         let mut hero_card_id = 0 as u32;
         if !read_serialized_card(
-            &deck_bytes,
+            deck_bytes,
             &mut current_byte_index,
             total_card_bytes,
             &mut prev_card_base,
@@ -152,7 +150,7 @@ fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> Result<DeserializedDec
         let mut card_count = 0;
         let mut card_id = 0;
         if !read_serialized_card(
-            &deck_bytes,
+            deck_bytes,
             &mut current_byte_index,
             total_card_bytes,
             &mut prev_card_base,
@@ -197,7 +195,7 @@ fn read_bits_chunk(n_chunk: u32, n_bits: u32, n_curr_shift: u32, n_out_bits: &mu
 fn read_encoded_u32(
     base_value: u32,
     base_bits: u32,
-    deck_bytes: &Vec<u8>,
+    deck_bytes: &[u8],
     start_index: &mut usize,
     end_index: usize,
     out_value: &mut u32,
@@ -212,9 +210,9 @@ fn read_encoded_u32(
                 break;
             }
 
-            let next_byte = deck_bytes.get(*start_index).unwrap();
+            let next_byte = deck_bytes[*start_index];
             *start_index += 1;
-            if !read_bits_chunk(*next_byte as u32, 7, delta_shift, out_value) {
+            if !read_bits_chunk(u32::from(next_byte), 7, delta_shift, out_value) {
                 break;
             }
 
@@ -224,7 +222,7 @@ fn read_encoded_u32(
 }
 
 fn read_serialized_card(
-    deck_bytes: &Vec<u8>,
+    deck_bytes: &[u8],
     start_index: &mut usize,
     end_index: usize,
     prev_card_base: &mut u32,
@@ -239,7 +237,7 @@ fn read_serialized_card(
     //header contains the count (2 bits), a continue flag, and 5 bits of offset data.
     //If we have 11 for the count bits we have the count
     //encoded after the offset
-    let header = deck_bytes.get(*start_index).unwrap();
+    let header = deck_bytes[*start_index];
     *start_index += 1;
 
     let has_extended_count = (header >> 6) == 0x03u8;
@@ -247,7 +245,7 @@ fn read_serialized_card(
     //read in the delta, which has 5 bits in the header, then additional bytes while the value is set
     let mut card_delta = 0;
     read_encoded_u32(
-        *header as u32,
+        u32::from(header),
         5,
         &deck_bytes,
         start_index,
@@ -258,14 +256,11 @@ fn read_serialized_card(
     *out_id = *prev_card_base + card_delta;
 
     //now parse the count if we have an extended count
-    match has_extended_count {
-        true => {
-            read_encoded_u32(0, 0, &deck_bytes, start_index, end_index, &mut (*out_count));
-        }
-        false => {
-            //the count is just the upper two bits + 1 (since we don't encode zero)
-            *out_count = (header >> 6) as u32 + 1;
-        }
+    if has_extended_count {
+        read_encoded_u32(0, 0, &deck_bytes, start_index, end_index, &mut (*out_count));
+    } else {
+        //the count is just the upper two bits + 1 (since we don't encode zero)
+        *out_count = u32::from(header >> 6) + 1;
     }
 
     *prev_card_base = *out_id;

@@ -17,7 +17,7 @@ pub fn encode(deck: &mut DeserializedDeck) -> Result<String, Error> {
     if deck.heroes.len() != 5 {
         return Err(Error::Encode("Decks must have 5 heroes"));
     }
-    if deck.cards.len() == 0 {
+    if deck.cards.is_empty() {
         return Err(Error::Encode("Decks must have cards"));
     }
 
@@ -26,7 +26,7 @@ pub fn encode(deck: &mut DeserializedDeck) -> Result<String, Error> {
     encode_bytes_to_string(&bytes)
 }
 
-fn encode_bytes_to_string(bytes: &Vec<u8>) -> Result<String, Error> {
+fn encode_bytes_to_string(bytes: &[u8]) -> Result<String, Error> {
     let byte_count = bytes.len();
     if byte_count == 0 {
         return Err(Error::Encode(
@@ -69,8 +69,7 @@ fn encode_bytes(deck: &mut DeserializedDeck) -> Vec<u8> {
 
     // write the name size
     let mut safe_name = String::new();
-    let mut name_len = 0;
-    if deck.name.len() > 0 {
+    let name_len = if !deck.name.is_empty() {
         safe_name = ammonia::clean(&deck.name);
         let mut trim_len = safe_name.len();
         while trim_len > 63 {
@@ -85,8 +84,10 @@ fn encode_bytes(deck: &mut DeserializedDeck) -> Vec<u8> {
             safe_name.split_off(split_len);
             trim_len = safe_name.len();
         }
-        name_len = safe_name.len();
-    }
+        safe_name.len()
+    } else {
+        0
+    };
 
     bytes.push(name_len as u8);
     add_remaining_number_to_buffer(count_heroes as u32, 3, &mut bytes);
@@ -144,12 +145,10 @@ fn extract_n_bits_with_carry(value: u32, num_bits: u8) -> u8 {
 fn add_remaining_number_to_buffer(value: u32, already_written_bits: u8, bytes: &mut Vec<u8>) {
     let mut curr_value = value;
     curr_value >>= already_written_bits;
-    let mut num_bytes = 0;
     while curr_value > 0 {
         let next_byte = extract_n_bits_with_carry(curr_value, 7);
         curr_value >>= 7;
         bytes.push(next_byte);
-        num_bytes = num_bytes + 1;
     }
 }
 
@@ -190,11 +189,11 @@ fn add_card_to_buffer(count: u32, value: u32, bytes: &mut Vec<u8>) {
     }
 }
 
-fn compute_checksum(bytes: &Vec<u8>, num_bytes: u32) -> u32 {
+fn compute_checksum(bytes: &[u8], num_bytes: u32) -> u32 {
     let mut checksum = 0;
 
     for add_check in HEADER_SIZE..num_bytes + HEADER_SIZE {
-        checksum = checksum + *bytes.get(add_check as usize).unwrap() as u32;
+        checksum += u32::from(bytes[add_check as usize]);
     }
 
     checksum

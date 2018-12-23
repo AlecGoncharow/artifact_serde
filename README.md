@@ -7,7 +7,7 @@ my other Rust Artifact [library](https://github.com/AlecGoncharow/artifact_lib),
 To install, add to `Cargo.toml`
 ```toml
 [dependencies]
-artifact_serde = "0.2.1"
+artifact_serde = "0.3.0"
 ```
 
 If you are still on rust version < 1.31.0 you will need to add this to your crate root
