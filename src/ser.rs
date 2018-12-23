@@ -1,3 +1,4 @@
+use super::Error;
 use crate::de::DeserializedDeck;
 
 const CURRENT_VERSION: u8 = 2;
@@ -12,23 +13,23 @@ const HEADER_SIZE: u32 = 3;
 /// let mut my_deck = artifact_serde::de::decode("ADCJWkTZX05uwGDCRV4XQGy3QGLmqUBg4GQJgGLGgO7AaABR3JlZW4vQmxhY2sgRXhhbXBsZQ__").unwrap();
 /// let my_adc = artifact_serde::ser::encode(&mut my_deck).unwrap();
 /// ```
-pub fn encode(deck: &mut DeserializedDeck) -> Result<String, String> {
+pub fn encode(deck: &mut DeserializedDeck) -> Result<String, Error> {
     if deck.heroes.len() != 5 {
-        return Err(String::from("Decks must have 5 heroes"));
+        return Err(Error::Encode("Decks must have 5 heroes"));
     }
     if deck.cards.len() == 0 {
-        return Err(String::from("Decks must have cards"));
+        return Err(Error::Encode("Decks must have cards"));
     }
 
-    let bytes = encode_bytes(deck).unwrap();
+    let bytes = encode_bytes(deck);
 
     encode_bytes_to_string(&bytes)
 }
 
-fn encode_bytes_to_string(bytes: &Vec<u8>) -> Result<String, String> {
+fn encode_bytes_to_string(bytes: &Vec<u8>) -> Result<String, Error> {
     let byte_count = bytes.len();
     if byte_count == 0 {
-        return Err(String::from(
+        return Err(Error::Encode(
             "No bytes were encoded, did you pass a non-empty deck?",
         ));
     }
@@ -50,7 +51,7 @@ fn encode_bytes_to_string(bytes: &Vec<u8>) -> Result<String, String> {
     Ok(deck_string)
 }
 
-fn encode_bytes(deck: &mut DeserializedDeck) -> Result<Vec<u8>, String> {
+fn encode_bytes(deck: &mut DeserializedDeck) -> Vec<u8> {
     deck.cards.sort();
     deck.heroes.sort();
 
@@ -122,7 +123,7 @@ fn encode_bytes(deck: &mut DeserializedDeck) -> Result<Vec<u8>, String> {
         *checksum_ref = small_checksum as u8;
     }
 
-    Ok(bytes)
+    bytes
 }
 
 fn extract_n_bits_with_carry(value: u32, num_bits: u8) -> u8 {

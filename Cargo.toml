@@ -1,6 +1,6 @@
 [package]
 name = "artifact_serde"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Alec Goncharow <Alec.Goncharow@gmail.com>"]
 description= "A small library used to deserializing and serializing the Artifact Deck Codes from Valve's DotA Card Game Artifact"
 repository = "https://github.com/AlecGoncharow/artifact_serde"

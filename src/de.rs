@@ -1,3 +1,4 @@
+use super::Error;
 use std::cmp::Ordering;
 
 /// Takes in an Artifact Deck Code as a &str and returns a DeserializedDeck matching the structure
@@ -8,7 +9,7 @@ use std::cmp::Ordering;
 /// artifact_serde::de::decode("ADCJWkTZX05uwGDCRV4XQGy3QGLmqUBg4GQJgGLGgO7AaABR3JlZW4vQmxhY2sgRXhhbXBsZQ__");
 /// ```
 
-pub fn decode(adc: &str) -> Result<DeserializedDeck, String> {
+pub fn decode(adc: &str) -> Result<DeserializedDeck, Error> {
     let re = regex::Regex::new(r"^ADC").unwrap();
     let mut stripped_adc = re.replace_all(adc, "");
     stripped_adc = stripped_adc
@@ -25,7 +26,7 @@ pub fn decode(adc: &str) -> Result<DeserializedDeck, String> {
     parse_deck(adc_string, decoded)
 }
 
-pub fn decode_from_string(adc: &String) -> Result<DeserializedDeck, String> {
+pub fn decode_from_string(adc: &String) -> Result<DeserializedDeck, Error> {
     decode(adc.as_str())
 }
 
@@ -94,7 +95,7 @@ impl DeserializedDeck {
     }
 }
 
-fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> Result<DeserializedDeck, String> {
+fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> Result<DeserializedDeck, Error> {
     let total_bytes = deck_bytes.len();
     let mut current_byte_index = 0 as usize;
     let version_and_heroes = deck_bytes.get(0).unwrap();
@@ -105,7 +106,7 @@ fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> Result<DeserializedDec
     let _checksum = deck_bytes.get(1).unwrap();
     current_byte_index += 1;
 
-    let total_card_bytes = if version > 1 as u8 {
+    let total_card_bytes = if version > 1u8 {
         current_byte_index += 1;
         total_bytes - *deck_bytes.get(2).unwrap() as usize
     } else {
@@ -135,8 +136,8 @@ fn parse_deck(_deck_code: String, deck_bytes: Vec<u8>) -> Result<DeserializedDec
             &mut hero_turn,
             &mut hero_card_id,
         ) {
-            return Err(format!(
-                "error during read_serialized_card, this is a bug if your ADC is confirmed valid, file bug report"
+            return Err(Error::Decode(
+                "error during read_serialized_card, this is a bug if your ADC is confirmed to be valid"
             ));
         }
         heroes.push(DeserializedHero {
@@ -241,7 +242,7 @@ fn read_serialized_card(
     let header = deck_bytes.get(*start_index).unwrap();
     *start_index += 1;
 
-    let has_extended_count = (header >> 6) == 0x03 as u8;
+    let has_extended_count = (header >> 6) == 0x03u8;
 
     //read in the delta, which has 5 bits in the header, then additional bytes while the value is set
     let mut card_delta = 0;
